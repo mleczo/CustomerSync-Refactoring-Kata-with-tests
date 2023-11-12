@@ -13,13 +13,13 @@ public class CustomerSync {
 
     public boolean syncWithDataLayer(ExternalCustomer externalCustomer) {
 
-        CustomerMatches customerMatches;
+        CustomerSearchResult customerSearchResult;
         if (externalCustomer.isCompany()) {
-            customerMatches = loadCompany(externalCustomer);
+            customerSearchResult = loadCompany(externalCustomer);
         } else {
-            customerMatches = loadPerson(externalCustomer);
+            customerSearchResult = loadPerson(externalCustomer);
         }
-        Customer customer = customerMatches.getCustomer();
+        Customer customer = customerSearchResult.getCustomer();
 
         if (customer == null) {
             customer = new Customer();
@@ -38,8 +38,8 @@ public class CustomerSync {
         }
         updateContactInfo(externalCustomer, customer);
 
-        if (customerMatches.hasDuplicates()) {
-            for (Customer duplicate : customerMatches.getDuplicates()) {
+        if (customerSearchResult.hasDuplicates()) {
+            for (Customer duplicate : customerSearchResult.getDuplicates()) {
                 updateDuplicate(externalCustomer, duplicate);
             }
         }
@@ -101,82 +101,82 @@ public class CustomerSync {
         customer.setAddress(externalCustomer.getPostalAddress());
     }
 
-    public CustomerMatches loadCompany(ExternalCustomer externalCustomer) {
+    public CustomerSearchResult loadCompany(ExternalCustomer externalCustomer) {
 
         final String externalId = externalCustomer.getExternalId();
         final String companyNumber = externalCustomer.getCompanyNumber();
 
-        CustomerMatches customerMatches = new CustomerMatches();
+        CustomerSearchResult customerSearchResult = new CustomerSearchResult();
         Customer matchByExternalId = customerDataLayer.findByExternalId(externalId);
         if (matchByExternalId != null) {
 
-            customerMatches.setCustomer(matchByExternalId);
-            customerMatches.setMatchTerm(CustomerMatches.MatchTerm.EXTERNAL_ID);
+            customerSearchResult.setCustomer(matchByExternalId);
+            customerSearchResult.setMatchTerm(CustomerSearchResult.MatchTerm.EXTERNAL_ID);
             Customer matchByMasterId = customerDataLayer.findByMasterExternalId(externalId);
             if (matchByMasterId != null)
-                customerMatches.addDuplicate(matchByMasterId);
-            if (customerMatches.getCustomer() != null && !CustomerType.COMPANY.equals(customerMatches.getCustomer().getCustomerType())) {
+                customerSearchResult.addDuplicate(matchByMasterId);
+            if (customerSearchResult.getCustomer() != null && !CustomerType.COMPANY.equals(customerSearchResult.getCustomer().getCustomerType())) {
                 throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a company");
             }
-            String customerCompanyNumber = customerMatches.getCustomer().getCompanyNumber();
+            String customerCompanyNumber = customerSearchResult.getCustomer().getCompanyNumber();
             if (!companyNumber.equals(customerCompanyNumber)) {
-                customerMatches.getCustomer().setMasterExternalId(null);
-                customerMatches.addDuplicate(customerMatches.getCustomer());
-                customerMatches.setCustomer(null);
-                customerMatches.setMatchTerm(null);
+                customerSearchResult.getCustomer().setMasterExternalId(null);
+                customerSearchResult.addDuplicate(customerSearchResult.getCustomer());
+                customerSearchResult.setCustomer(null);
+                customerSearchResult.setMatchTerm(null);
             }
         } else {
             Customer matchByCompanyNumber = customerDataLayer.findByCompanyNumber(companyNumber);
             if (matchByCompanyNumber == null)
-                return new CustomerMatches();
-            customerMatches.setCustomer(matchByCompanyNumber);
-            customerMatches.setMatchTerm(CustomerMatches.MatchTerm.COMPANY_NUMBER);
+                return new CustomerSearchResult();
+            customerSearchResult.setCustomer(matchByCompanyNumber);
+            customerSearchResult.setMatchTerm(CustomerSearchResult.MatchTerm.COMPANY_NUMBER);
 
-            if (customerMatches.getCustomer() != null && !CustomerType.COMPANY.equals(customerMatches.getCustomer().getCustomerType())) {
+            if (customerSearchResult.getCustomer() != null && !CustomerType.COMPANY.equals(customerSearchResult.getCustomer().getCustomerType())) {
                 throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a company");
             }
-            String customerExternalId = customerMatches.getCustomer().getExternalId();
+            String customerExternalId = customerSearchResult.getCustomer().getExternalId();
             if (customerExternalId != null && !externalId.equals(customerExternalId)) {
                 throw new ConflictException("Existing customer for externalCustomer " + companyNumber + " doesn't match external id " + externalId + " instead found " + customerExternalId);
             }
-            Customer customer = customerMatches.getCustomer();
+            Customer customer = customerSearchResult.getCustomer();
             customer.setExternalId(externalId);
             customer.setMasterExternalId(externalId);
-            customerMatches.addDuplicate(null);
+            customerSearchResult.addDuplicate(null);
         }
 
 
-        if (customerMatches.getMatchTerm() == CustomerMatches.MatchTerm.EXTERNAL_ID) {
+        if (customerSearchResult.getMatchTerm() == CustomerSearchResult.MatchTerm.EXTERNAL_ID) {
 
-        } else if (customerMatches.getMatchTerm() == CustomerMatches.MatchTerm.COMPANY_NUMBER) {
+        } else if (customerSearchResult.getMatchTerm() == CustomerSearchResult.MatchTerm.COMPANY_NUMBER) {
 
         }
 
-        return customerMatches;
+        return customerSearchResult;
     }
 
-    public CustomerMatches loadPerson(ExternalCustomer externalCustomer) {
+    public CustomerSearchResult loadPerson(ExternalCustomer externalCustomer) {
         final String externalId = externalCustomer.getExternalId();
 
-        CustomerMatches matches = new CustomerMatches();
+        CustomerSearchResult matches = new CustomerSearchResult();
         Customer matchByPersonalNumber = customerDataLayer.findByExternalId(externalId);
         matches.setCustomer(matchByPersonalNumber);
         if (matchByPersonalNumber != null)
-            matches.setMatchTerm(CustomerMatches.MatchTerm.EXTERNAL_ID);
-        CustomerMatches customerMatches = matches;
+            matches.setMatchTerm(CustomerSearchResult.MatchTerm.EXTERNAL_ID);
+        CustomerSearchResult customerSearchResult = matches;
 
-        if (customerMatches.getCustomer() != null) {
-            if (!CustomerType.PERSON.equals(customerMatches.getCustomer().getCustomerType())) {
+        if (customerSearchResult.getCustomer() != null) {
+            if (!CustomerType.PERSON.equals(customerSearchResult.getCustomer().getCustomerType())) {
                 throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a person");
             }
 
-            if (CustomerMatches.MatchTerm.EXTERNAL_ID != customerMatches.getMatchTerm()) {
-                Customer customer = customerMatches.getCustomer();
+            if (CustomerSearchResult.MatchTerm.EXTERNAL_ID != customerSearchResult.getMatchTerm()) {
+                Customer customer = customerSearchResult.getCustomer();
                 customer.setExternalId(externalId);
                 customer.setMasterExternalId(externalId);
             }
         }
 
-        return customerMatches;
+        return customerSearchResult;
     }
 }

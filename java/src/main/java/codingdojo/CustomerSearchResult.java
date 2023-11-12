@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Data
-public class CustomerMatches {
+public class CustomerSearchResult {
     private Collection<Customer> duplicates = new ArrayList<>();
     private MatchTerm matchTerm;
     private Customer customer;
