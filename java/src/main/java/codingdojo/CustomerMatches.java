@@ -4,12 +4,16 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
 @Data
 public class CustomerMatches {
     private Collection<Customer> duplicates = new ArrayList<>();
-    private String matchTerm;
+    private MatchTerm matchTerm;
     private Customer customer;
 
+    enum MatchTerm {
+        EXTERNAL_ID, COMPANY_NUMBER
+    }
 
 
     public boolean hasDuplicates() {
@@ -19,7 +23,6 @@ public class CustomerMatches {
     public void addDuplicate(Customer duplicate) {
         duplicates.add(duplicate);
     }
-
 
 
 }
