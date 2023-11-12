@@ -1,0 +1,10 @@
+**/target
+*.iml
+.idea
+**/*.pyc
+**/.pytest_cache
+python/venv
+.vs
+CSharp/bin
+CSharp/obj
+.DS_Store
