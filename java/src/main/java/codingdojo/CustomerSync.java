@@ -84,12 +84,6 @@ public class CustomerSync {
     }
 
     private void updateDuplicate(ExternalCustomer externalCustomer, Customer duplicate) {
-        if (duplicate == null) {
-            duplicate = new Customer();
-            duplicate.setExternalId(externalCustomer.getExternalId());
-            duplicate.setMasterExternalId(externalCustomer.getExternalId());
-        }
-
         duplicate.setName(externalCustomer.getName());
 
         if (duplicate.getInternalId() == null) {
@@ -137,17 +131,20 @@ public class CustomerSync {
 
         CustomerSearchResult customerSearchResult = CustomerSearchResult.found(matchByCompanyNumber, CustomerSearchResult.MatchTerm.COMPANY_NUMBER);
 
-        if (!CustomerType.COMPANY.equals(customerSearchResult.getCustomer().getCustomerType())) {
+        if (!CustomerType.COMPANY.equals(matchByCompanyNumber.getCustomerType())) {
             throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a company");
         }
-        String customerExternalId = customerSearchResult.getCustomer().getExternalId();
+        String customerExternalId = matchByCompanyNumber.getExternalId();
         if (customerExternalId != null && !externalId.equals(customerExternalId)) {
             throw new ConflictException("Existing customer for externalCustomer " + companyNumber + " doesn't match external id " + externalId + " instead found " + customerExternalId);
         }
-        Customer customer = customerSearchResult.getCustomer();
-        customer.setExternalId(externalId);
-        customer.setMasterExternalId(externalId);
-        customerSearchResult.addDuplicate(null);//todo
+        matchByCompanyNumber.setExternalId(externalId);
+        matchByCompanyNumber.setMasterExternalId(externalId);
+
+        Customer duplicate = new Customer();
+        duplicate.setExternalId(externalId);
+        duplicate.setMasterExternalId(externalId);
+        customerSearchResult.addDuplicate(duplicate);
         return Optional.of(customerSearchResult);
     }
 

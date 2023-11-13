@@ -5,6 +5,7 @@ import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 @Value
 public class CustomerSearchResult {
@@ -26,6 +27,7 @@ public class CustomerSearchResult {
     }
 
     public void addDuplicate(Customer duplicate) {
+        Objects.requireNonNull(duplicate);
         duplicates.add(duplicate);
     }
 
