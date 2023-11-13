@@ -145,7 +145,7 @@ public class CustomerSync {
         duplicate.setExternalId(externalId);
         duplicate.setMasterExternalId(externalId);
 
-        CustomerSearchResult customerSearchResult = CustomerSearchResult.found(List.of(duplicate), matchByCompanyNumber, CustomerSearchResult.MatchTerm.COMPANY_NUMBER);
+        CustomerSearchResult customerSearchResult = CustomerSearchResult.found(List.of(duplicate), matchByCompanyNumber);
         return Optional.of(customerSearchResult);
     }
 
@@ -166,11 +166,11 @@ public class CustomerSync {
         if (duplicateByMasterExternalId != null)
             duplicates.add(duplicateByMasterExternalId);
         if (companyNumberMatches) {
-            customerSearchResult = CustomerSearchResult.found(duplicates, customerByExternalId, CustomerSearchResult.MatchTerm.EXTERNAL_ID);
+            customerSearchResult = CustomerSearchResult.found(duplicates, customerByExternalId);
         } else {
             customerByExternalId.setMasterExternalId(null);
             duplicates.add(customerByExternalId);
-            customerSearchResult = new CustomerSearchResult(duplicates, null, null);
+            customerSearchResult = new CustomerSearchResult(duplicates, null);
         }
 
         return Optional.of(customerSearchResult);
@@ -184,7 +184,7 @@ public class CustomerSync {
         if (byExternalId == null)
             return Optional.empty();
 
-        CustomerSearchResult customerSearchResult = CustomerSearchResult.found(List.of(), byExternalId, CustomerSearchResult.MatchTerm.EXTERNAL_ID);
+        CustomerSearchResult customerSearchResult = CustomerSearchResult.found(List.of(), byExternalId);
 
         if (!CustomerType.PERSON.equals(customerSearchResult.getCustomer().getCustomerType())) {
             throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a person");
