@@ -20,7 +20,12 @@ public class CustomerSync {
         } else {
             searchResult = loadPerson(externalCustomer);
         }
-        CustomerSearchResult customerSearchResult = searchResult.orElse(new CustomerSearchResult(null, null));
+
+        if (searchResult.isEmpty()) {
+            return createNewCustomer(externalCustomer);
+        }
+
+        CustomerSearchResult customerSearchResult = searchResult.get();
         Customer customer = customerSearchResult.getCustomer();
 
         if (customer == null) {
@@ -50,6 +55,19 @@ public class CustomerSync {
         updatePreferredStore(externalCustomer, customer);
 
         return created;
+
+    }
+
+    private boolean createNewCustomer(ExternalCustomer externalCustomer) {
+        Customer customer = new Customer();
+        customer.setExternalId(externalCustomer.getExternalId());
+        customer.setMasterExternalId(externalCustomer.getExternalId());
+        populateFields(externalCustomer, customer);
+        updateContactInfo(externalCustomer, customer);
+        updateRelations(externalCustomer, customer);
+        updatePreferredStore(externalCustomer, customer);
+        createCustomer(customer);
+        return true;
     }
 
     private void updateRelations(ExternalCustomer externalCustomer, Customer customer) {
