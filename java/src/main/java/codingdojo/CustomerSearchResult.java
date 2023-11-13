@@ -3,18 +3,17 @@ package codingdojo;
 import lombok.Data;
 import lombok.Value;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 @Value
 public class CustomerSearchResult {
-    Collection<Customer> duplicates = new ArrayList<>();
+    List<Customer> duplicates;
     MatchTerm matchTerm;
     Customer customer;
 
-    public static CustomerSearchResult found(Customer customer, MatchTerm matchTerm) {
-        return new CustomerSearchResult(matchTerm, customer);
+    public static CustomerSearchResult found(List<Customer> duplicates, Customer customer, MatchTerm matchTerm) {
+        List<Customer> dupsImmutable = Collections.unmodifiableList(new ArrayList<>(duplicates));
+        return new CustomerSearchResult(dupsImmutable, matchTerm, customer);
     }
 
     enum MatchTerm {
@@ -24,11 +23,6 @@ public class CustomerSearchResult {
 
     public boolean hasDuplicates() {
         return !duplicates.isEmpty();
-    }
-
-    public void addDuplicate(Customer duplicate) {
-        Objects.requireNonNull(duplicate);
-        duplicates.add(duplicate);
     }
 
 
