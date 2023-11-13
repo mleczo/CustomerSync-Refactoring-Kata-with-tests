@@ -15,9 +15,4 @@ public class CustomerSearchResult {
         return new CustomerSearchResult(dupsImmutable, customer);
     }
 
-    public boolean hasDuplicates() {
-        return !duplicates.isEmpty();
-    }
-
-
 }

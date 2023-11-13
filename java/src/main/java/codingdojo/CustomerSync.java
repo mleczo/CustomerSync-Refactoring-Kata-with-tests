@@ -1,5 +1,6 @@
 package codingdojo;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -14,26 +15,15 @@ public class CustomerSync {
 
 
     public boolean syncWithDataLayer(ExternalCustomer externalCustomer) {
+        Optional<CustomerSearchResult> searchResult = loadCustomer(externalCustomer);
 
-        Optional<CustomerSearchResult> searchResult;
-        if (externalCustomer.isCompany()) {
-            searchResult = loadCompany(externalCustomer);
-        } else {
-            searchResult = loadPerson(externalCustomer);
-        }
+        Customer customer = searchResult.map(CustomerSearchResult::getCustomer).orElseGet(() -> {
+            Customer newCustomer = new Customer();
+            newCustomer.setExternalId(externalCustomer.getExternalId());
+            newCustomer.setMasterExternalId(externalCustomer.getExternalId());
+            return newCustomer;
+        });
 
-        if (searchResult.isEmpty()) {
-            return createNewCustomer(externalCustomer);
-        }
-
-        CustomerSearchResult customerSearchResult = searchResult.get();
-        Customer customer = customerSearchResult.getCustomer();
-
-        if (customer == null) {
-            customer = new Customer();
-            customer.setExternalId(externalCustomer.getExternalId());
-            customer.setMasterExternalId(externalCustomer.getExternalId());
-        }
 
         populateFields(externalCustomer, customer);
 
@@ -46,11 +36,12 @@ public class CustomerSync {
         }
         updateContactInfo(externalCustomer, customer);
 
-        if (customerSearchResult.hasDuplicates()) {
-            for (Customer duplicate : customerSearchResult.getDuplicates()) {
-                updateDuplicate(externalCustomer, duplicate);
-            }
+        List<Customer> duplicates = searchResult.map(CustomerSearchResult::getDuplicates)
+                .orElse(List.of());
+        for (Customer duplicate : duplicates) {
+            updateDuplicate(externalCustomer, duplicate);
         }
+
 
         updateRelations(externalCustomer, customer);
         updatePreferredStore(externalCustomer, customer);
@@ -59,16 +50,14 @@ public class CustomerSync {
 
     }
 
-    private boolean createNewCustomer(ExternalCustomer externalCustomer) {
-        Customer customer = new Customer();
-        customer.setExternalId(externalCustomer.getExternalId());
-        customer.setMasterExternalId(externalCustomer.getExternalId());
-        populateFields(externalCustomer, customer);
-        updateContactInfo(externalCustomer, customer);
-        updateRelations(externalCustomer, customer);
-        updatePreferredStore(externalCustomer, customer);
-        createCustomer(customer);
-        return true;
+    private Optional<CustomerSearchResult> loadCustomer(ExternalCustomer externalCustomer) {
+        Optional<CustomerSearchResult> searchResult;
+        if (externalCustomer.isCompany()) {
+            searchResult = loadCompany(externalCustomer);
+        } else {
+            searchResult = loadPerson(externalCustomer);
+        }
+        return searchResult;
     }
 
     private void updateRelations(ExternalCustomer externalCustomer, Customer customer) {
@@ -186,7 +175,7 @@ public class CustomerSync {
 
         CustomerSearchResult customerSearchResult = CustomerSearchResult.found(List.of(), byExternalId);
 
-        if (!CustomerType.PERSON.equals(customerSearchResult.getCustomer().getCustomerType())) {
+        if (!CustomerType.PERSON.equals(byExternalId.getCustomerType())) {
             throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a person");
         }
 
