@@ -1,21 +1,19 @@
 package codingdojo;
 
 import lombok.Data;
+import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-@Data
+@Value
 public class CustomerSearchResult {
-    private Collection<Customer> duplicates = new ArrayList<>();
-    private MatchTerm matchTerm;
-    private Customer customer;
+    Collection<Customer> duplicates = new ArrayList<>();
+    MatchTerm matchTerm;
+    Customer customer;
 
     public static CustomerSearchResult found(Customer customer, MatchTerm matchTerm) {
-        CustomerSearchResult customerSearchResult = new CustomerSearchResult();
-        customerSearchResult.setCustomer(customer); //todo make this class immutable
-        customerSearchResult.setMatchTerm(matchTerm);
-        return customerSearchResult;
+        return new CustomerSearchResult(matchTerm, customer);
     }
 
     enum MatchTerm {
