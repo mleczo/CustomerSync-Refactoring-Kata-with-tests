@@ -1,6 +1,15 @@
 package codingdojo;
 
 public interface CustomerDataLayer {
+    default boolean save(Customer customer) {
+        if (customer.getInternalId() == null) {
+            createCustomerRecord(customer);
+            return true;
+        } else {
+            updateCustomerRecord(customer);
+            return false;
+        }
+    }
 
     Customer updateCustomerRecord(Customer customer);
 
