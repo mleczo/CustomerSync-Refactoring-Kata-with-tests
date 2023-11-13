@@ -11,6 +11,13 @@ public class CustomerSearchResult {
     private MatchTerm matchTerm;
     private Customer customer;
 
+    public static CustomerSearchResult found(Customer customer, MatchTerm matchTerm) {
+        CustomerSearchResult customerSearchResult = new CustomerSearchResult();
+        customerSearchResult.setCustomer(customer); //todo make this class immutable
+        customerSearchResult.setMatchTerm(matchTerm);
+        return customerSearchResult;
+    }
+
     enum MatchTerm {
         EXTERNAL_ID, COMPANY_NUMBER
     }
